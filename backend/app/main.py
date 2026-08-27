@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from backend.app.database import Base, engine
-
 from backend.app.modules.inventario import models as inventario_models
+from backend.app.modules.inventario.router import router as inventario_router
 
 Base.metadata.create_all(bind=engine)  # Crea las tablas en la base de datos
 
@@ -10,6 +10,8 @@ app = FastAPI(
     description="Backend para el sistema ERP",
     version="0.1.0"
 )
+
+app.include_router(inventario_router, prefix="/api/v1")
 
 @app.get("/")
 def home():

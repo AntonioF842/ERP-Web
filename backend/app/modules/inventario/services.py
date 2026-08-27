@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from backend.app.modules.inventario.models import Producto
-from backend.app.modules.inventario.shemas import ProductoCreate, ProductoUpdate
+from backend.app.modules.inventario.schemas import ProductoCreate, ProductoUpdate
 
 def get_producto_by_id(db: Session, producto_id: int):
     return db.query(Producto).filter(Producto.id == producto_id).first()
