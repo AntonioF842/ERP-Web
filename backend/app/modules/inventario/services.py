@@ -53,4 +53,26 @@ def registar_movimento(db: Session, movimiento_in: MovimientoCreate):
     db.commit()
     db.refresh(producto)
     return db_movimiento
+
+def update_producto(db: Session, producto_id: int, producto_in: ProductoUpdate):
+    db_producto = get_producto_by_id(db, producto_id)
+    if not db_producto:
+        return None
+
+    update_data = producto_in.model_dump(exclude_unset=True)
+
+    for key, value in update_data.items():
+        setattr(db_producto, key, value)
+
+    db.commit()
+    db.refresh(db_producto)
+
+def delete_producto(db: Session, producto_id: int):
+    db_producto = get_producto_by_id(db, producto_id)
+    if not db_producto:
+        return False
+
+    db.delete(db_producto)
+    db.commit()
+    return True
     

@@ -41,3 +41,23 @@ def crear_movimiento(movimiento: schemas.MovimientoCreate, db: Session = Depends
         return db_movimiento
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+# Actulizar Producto(PUT/PATCH)
+@router.put("/productos/{producto_id}", response_model=schemas.ProductoResponse)
+def actualizar_producto(
+    producto_id: int,
+    producto: schemas.ProductoUpdate,
+    db: Session = Depends(get_db)
+):
+    db_producto = services.update_producto(db=db, producto_id=producto_id, producto_in=producto)
+    if not db_producto:
+        raise HTTPException(status_code=404, detail="Producto no encontrado")
+    return db_producto
+
+# Eliminar Producto(DELETE)
+@router.delete("/productos/{producto_id}", status_code=status.HTTP_204_NO_CONTENT)
+def eliminar_producto(producto_id: int, db: Session = Depends(get_db)):
+    exito = services.delete_producto(db=db, producto_id=producto_id)
+    if not exito:
+        raise HTTPException(status_code=404, detail="Producto no encontrado")
+    return None
