@@ -17,7 +17,7 @@ class ProductoCreate(ProductoBase):
     pass
 
 # Esquema de actualización de un producto
-class ProductoUpdate(ProductoBase):
+class ProductoUpdate(BaseModel):
     nombre: Optional[str] = None
     descripcion: Optional[str] = None
     precio_venta: Optional[float] = None
