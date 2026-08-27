@@ -31,3 +31,13 @@ def obtener_producto(producto_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Producto no encontrado")
     return db_producto
 
+# Movimientos
+@router.post("/moviminetos", response_model=schemas.MovimientoResponse, status_code=status.HTTP_201_CREATED)
+def crear_movimiento(movimiento: schemas.MovimientoCreate, db: Session = Depends(get_db)):
+    try:
+        db_movimiento = services.registrar_movimineto(db=db, movimiento_in=movimiento)
+        if not db_movimiento:
+            raise HTTPException(status_code=404, detail="Producto no encontrado")
+        return db_movimiento
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))

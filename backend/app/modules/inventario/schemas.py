@@ -31,3 +31,16 @@ class ProductoResponse(ProductoBase):
     fecha_creacion: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+# Definir Movimientos
+class MovimientoCreate(BaseModel):
+    producto_id: int
+    tipo_movimiento: str # "ENTRADA", "SALIDA", "AJUSTE"
+    cantidad: int
+    motivo: Optional[str] =None
+
+class MovimientoResponse(MovimientoCreate):
+    id: int
+    fecha: datetime
+
+    model_config = ConfigDict(from_attributes=True)
