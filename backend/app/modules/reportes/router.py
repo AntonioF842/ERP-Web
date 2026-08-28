@@ -1,0 +1,38 @@
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+from typing import List
+
+from backend.app.database import get_db
+from backend.app.modules.reportes import services
+from backend.app.core.security import require_roles
+from backend.app.modules.usuarios.models import Usuario
+
+router = APIRouter(
+    prefix="/reportes",
+    tags=["Reportes y Dashboard"]
+)
+
+# Stock bajo
+@router.get("/stock-bajo")
+def obtener_alertas_stock(
+    db: Session = Depends(get_db),
+    _user: Usuario = Depends(require_roles(["admin", "almacen"]))
+):
+    return services.get_productos_stock_bajo(db=db)
+
+# Resumen Financiero
+@router.get("/resumen")
+def obtener_resumen_general(
+    db: Session = Depends(get_db),
+    _user: Usuario = Depends(require_roles(["admin"]))
+):
+    return services.get_resumen_ventas(db=db)
+
+# Top Productos
+@router.get("/top-productos")
+def obtener_top_productos(
+    limit: int = 5,
+    db: Session = Depends(get_db),
+    _user: Usuario = Depends(require_roles(["admin"]))
+):
+    return services.get_top_productos(db=db, limit=limit)

@@ -7,8 +7,8 @@ from backend.app.modules.inventario.services import registrar_movimento
 from backend.app.modules.inventario.schemas import MovimientoCreate
 
 def procesar_venta(db: Session, venta_in: VentaCreate, usuario_id: int):
-    subtotal_acumulado: 0.0
-    detalles_db: []
+    subtotal_acumulado = 0.0
+    detalles_db = []
 
     # 1. Validar produtos y calcular importes
     for item in venta_in.detalles:
