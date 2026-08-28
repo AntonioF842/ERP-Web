@@ -2,7 +2,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, List
 from jose import jwt, JWTError
 from passlib.context import CryptContext
 
@@ -62,3 +62,14 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         raise HTTPException(status_code=400, detail="Usuario inactivo")
 
     return usuario
+
+# Validador de roles
+def require_roles(allowed_roles: List[str]):
+    def rol_checker(current_user: Usuario = Depends(get_current_user)) -> Usuario: 
+        if current_user.rol not in allowed_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Acceso denegado: Se requiere alguno de los siguientes roles: {allowed_roles} "
+            )
+        return current_user
+    return rol_checker

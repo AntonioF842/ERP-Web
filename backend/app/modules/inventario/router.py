@@ -6,6 +6,8 @@ from backend.app.database import get_db
 from backend.app.modules.inventario import services, schemas
 from backend.app.core.security import get_current_user
 from backend.app.modules.usuarios.models import Usuario
+from backend.app.core.security import get_current_user, require_roles
+from backend.app.modules.usuarios.models import Usuario
 
 router = APIRouter(
     prefix="/inventario",
@@ -14,8 +16,11 @@ router = APIRouter(
 
 # Crear un nuevo producto
 @router.post("/productos/", response_model=schemas.ProductoResponse, status_code=status.HTTP_201_CREATED)
-def create_producto(producto: schemas.ProductoCreate, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
-    print(f"Producto creado por el usuario: {current_user.email}")
+def create_producto(
+    producto: schemas.ProductoCreate, 
+    db: Session = Depends(get_db),
+    _user: Usuario = Depends(require_roles(["admin", "almacen"]))
+):
     db_producto = services.get_producto_by_sku(db, sku=producto.sku)
     if db_producto:
         raise HTTPException(status_code=400, detail="El SKU del producto ya existe")
@@ -59,8 +64,11 @@ def actualizar_producto(
 
 # Eliminar Producto(DELETE)
 @router.delete("/productos/{producto_id}", status_code=status.HTTP_204_NO_CONTENT)
-def eliminar_producto(producto_id: int, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
-    print(f"Producto eliminado por el usuario: {current_user.email}")
+def eliminar_producto(
+    producto_id: int, 
+    db: Session = Depends(get_db), 
+    _user: Usuario = Depends(require_roles(["admin"]))
+):
     exito = services.delete_producto(db=db, producto_id=producto_id)
     if not exito:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
