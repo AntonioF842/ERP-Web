@@ -27,7 +27,7 @@ def create_producto(db: Session, producto: ProductoCreate):
     db.refresh(db_producto)
     return db_producto
 
-def registar_movimento(db: Session, movimiento_in: MovimientoCreate):
+def registrar_movimento(db: Session, movimiento_in: MovimientoCreate):
     producto = db.query(Producto).filter(Producto.id == movimiento_in.producto_id).first()
     # Buscar Producto
     if not producto:

@@ -3,7 +3,7 @@ from fastapi import HTTPException
 from backend.app.modules.ventas.models import Venta, DetalleVenta
 from backend.app.modules.ventas.schemas import VentaCreate
 from backend.app.modules.inventario.models import Producto
-from backend.app.modules.inventario.services import registar_movimento
+from backend.app.modules.inventario.services import registrar_movimento
 from backend.app.modules.inventario.schemas import MovimientoCreate
 
 def procesar_venta(db: Session, venta_in: VentaCreate, usuario_id: int):
@@ -61,8 +61,46 @@ def procesar_venta(db: Session, venta_in: VentaCreate, usuario_id: int):
             cantidad=detalle.catidad,
             motivo=f"Venta registrada ID {db_venta.id}"
         )
-        registar_movimento(db=db, movimiento_in=mov_in)
+        registrar_movimento(db=db, movimiento_in=mov_in)
 
     db.commit()
     db.refresh(db_venta)
     return db_venta
+
+# Obtener todas las ventas con paginación
+def get_ventas(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(Venta).offset(skip).limit(limit).all()
+
+# Obtener venta por ID
+def get_venta_by_id(db: Session, venta_id: int):
+    return db.query(Venta).filter(Venta.id == venta_id).first()
+
+# Cancelar venta(Devuelve el stock al inventario)
+def cancelar_venta(db: Session, venta_id: int):
+    venta = get_venta_by_id(db, venta_id)
+    if not venta:
+        raise HTTPException(
+            status_code=404,
+            detail="Venta no encontrada"
+        )
+    if venta.estado == "CANCELADA":
+        raise HTTPException(
+            status_code=400,
+            detail="La venta ya esta cancelada"
+        )
+    # Marca venta cancelada
+    venta.estado = "CANCELADA"
+
+    # reingresa las existencias al inventario
+    for detalle in venta.detalles:
+        mov_in = MovimientoCreate(
+            producto_id=detalle.producto_id,
+            tipo_movimiento="ENTRADA",
+            cantidad=detalle.cantidad,
+            motivo=f"Cancelación de Venta ID #{venta.id}"
+        )
+        registrar_movimento(db=db, movimineto_in=mov_in)
+
+    db.commit()
+    db.refresh(venta)
+    return venta
