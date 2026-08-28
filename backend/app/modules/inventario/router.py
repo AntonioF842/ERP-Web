@@ -4,7 +4,6 @@ from typing import List
 
 from backend.app.database import get_db
 from backend.app.modules.inventario import services, schemas
-from backend.app.core.security import get_current_user
 from backend.app.modules.usuarios.models import Usuario
 from backend.app.core.security import get_current_user, require_roles
 from backend.app.modules.usuarios.models import Usuario
