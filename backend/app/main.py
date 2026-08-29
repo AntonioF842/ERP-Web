@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from backend.app.database import Base, engine
+from backend.app.core.config import settings
 from backend.app.modules.inventario import models as inventario_models
 from backend.app.modules.usuarios import models as usuarios_models
 from backend.app.modules.ventas import models as ventas_models
@@ -12,9 +13,8 @@ from backend.app.modules.reportes.router import router as reportes_router
 Base.metadata.create_all(bind=engine)  # Crea las tablas en la base de datos
 
 app = FastAPI(
-    title="ERP Web API",
-    description="Backend para el sistema ERP",
-    version="0.1.0"
+    title=settings.PROJECT_NAME,
+    version=settings.VERSION
 )
 
 app.include_router(inventario_router, prefix="/api/v1")
@@ -24,4 +24,4 @@ app.include_router(reportes_router, prefix="/api/v1")
 
 @app.get("/")
 def home():
-    return {"message": "API del ERP funcionando correctamente"}
+    return {"message": f"{settings.PROJECT_NAME} funciona correctamente"}
