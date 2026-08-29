@@ -1,9 +1,16 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing import List
 
 class Settings(BaseSettings):
     PROJECT_NAME: str =  "ERP Web API"
     VERSION: str = "0.1.0"
     DEBUG: bool = True
+
+    BACKEND_CORS_ORIGINS: List[str] = [
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173"
+    ]
 
     SECRET_KEY: str
     ALGORITHM: str = "HS256"
