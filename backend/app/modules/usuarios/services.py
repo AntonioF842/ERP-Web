@@ -25,6 +25,6 @@ def authenticate_usuario(db: Session, email: str, password: str):
     usuario = get_usuario_by_email(db, email)
     if not usuario:
         return False
-    if not verify_password(password, usuario.hash_password):
+    if not verify_password(password, usuario.hashed_password):
         return False
     return usuario

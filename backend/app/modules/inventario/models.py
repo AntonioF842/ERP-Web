@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Text
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 from backend.app.database import Base
 
 class Producto(Base):
@@ -16,7 +16,7 @@ class Producto(Base):
     stock_minimo = Column(Integer, nullable=False, default=0)
 
     # Auditorioa
-    fecha_creacion = Column(DateTime, default=datetime.utcnow)
+    fecha_creacion = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     # Relacion uno a muchos con los movimientos de inventario
     movimientos = relationship("MovimientoInventario", back_populates="producto", cascade="all, delete-orphan")
@@ -29,7 +29,7 @@ class MovimientoInventario(Base):
     tipo_movimiento = Column(String(50), nullable=False)  # "entrada", "salida", "ajuste"
     cantidad = Column(Integer, nullable=False)
     motivo = Column(String(255), nullable=True)
-    fecha = Column(DateTime, default=datetime.utcnow)
+    fecha = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     # Relacion con el producto
     producto = relationship("Producto", back_populates="movimientos")

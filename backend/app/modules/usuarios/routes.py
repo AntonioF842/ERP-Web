@@ -14,8 +14,8 @@ router = APIRouter(
 
 # Registro de usuarios
 @router.post("/registro", response_model=schemas.UsuarioResponse, status_code=status.HTTP_201_CREATED)
-def registrar_usuarios(usuario: schemas.UsuarioCreate, db: Session = Depends(get_db)):
-    db_usuario = services.get_usuarios_by_email(db, email=usuario.email)
+def registrar_usuario(usuario: schemas.UsuarioCreate, db: Session = Depends(get_db)):
+    db_usuario = services.get_usuario_by_email(db, email=usuario.email)
     if db_usuario:
         raise HTTPException(status_code=400, detail="El correo electrónico ya se encuentra registrado")
     return services.create_usuario(db=db, usuario_in=usuario)

@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime
-from datetime import datetime
+from datetime import datetime, timezone
 from backend.app.database import Base
 
 class Usuario(Base):
@@ -8,7 +8,7 @@ class Usuario(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String(150), unique=True, index=True, nullable=False)
     nombre_completo = Column(String(150), nullable=False)
-    hash_password = Column(String(105),nullable=False)
+    hashed_password = Column(String(105),nullable=False)
     rol = Column(String(50), nullable=False, default="usuario") # Admin, almacen, vendedor
     activo =Column(Boolean, default=True)
-    fecha_creacion = Column(DateTime, default=datetime.utcnow)
+    fecha_creacion = Column(DateTime, default=lambda: datetime.now(timezone.utc))

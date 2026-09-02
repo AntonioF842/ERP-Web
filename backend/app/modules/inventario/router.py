@@ -14,7 +14,7 @@ router = APIRouter(
     )
 
 # Crear un nuevo producto
-@router.post("/productos/", response_model=schemas.ProductoResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/productos", response_model=schemas.ProductoResponse, status_code=status.HTTP_201_CREATED)
 def create_producto(
     producto: schemas.ProductoCreate, 
     db: Session = Depends(get_db),
@@ -39,10 +39,10 @@ def obtener_producto(producto_id: int, db: Session = Depends(get_db)):
     return db_producto
 
 # Movimientos
-@router.post("/moviminetos", response_model=schemas.MovimientoResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/movimientos", response_model=schemas.MovimientoResponse, status_code=status.HTTP_201_CREATED)
 def crear_movimiento(movimiento: schemas.MovimientoCreate, db: Session = Depends(get_db)):
     try:
-        db_movimiento = services.registrar_movimineto(db=db, movimiento_in=movimiento)
+        db_movimiento = services.registrar_movimiento(db=db, movimiento_in=movimiento)
         if not db_movimiento:
             raise HTTPException(status_code=404, detail="Producto no encontrado")
         return db_movimiento

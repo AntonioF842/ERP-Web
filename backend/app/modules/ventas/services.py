@@ -3,7 +3,7 @@ from fastapi import HTTPException
 from backend.app.modules.ventas.models import Venta, DetalleVenta
 from backend.app.modules.ventas.schemas import VentaCreate
 from backend.app.modules.inventario.models import Producto
-from backend.app.modules.inventario.services import registrar_movimento
+from backend.app.modules.inventario.services import registrar_movimiento
 from backend.app.modules.inventario.schemas import MovimientoCreate
 
 def procesar_venta(db: Session, venta_in: VentaCreate, usuario_id: int):
@@ -61,7 +61,7 @@ def procesar_venta(db: Session, venta_in: VentaCreate, usuario_id: int):
             cantidad=detalle.catidad,
             motivo=f"Venta registrada ID {db_venta.id}"
         )
-        registrar_movimento(db=db, movimiento_in=mov_in)
+        registrar_movimiento(db=db, movimiento_in=mov_in)
 
     db.commit()
     db.refresh(db_venta)
@@ -99,7 +99,7 @@ def cancelar_venta(db: Session, venta_id: int):
             cantidad=detalle.cantidad,
             motivo=f"Cancelación de Venta ID #{venta.id}"
         )
-        registrar_movimento(db=db, movimineto_in=mov_in)
+        registrar_movimiento(db=db, movimiento_in=mov_in)
 
     db.commit()
     db.refresh(venta)
