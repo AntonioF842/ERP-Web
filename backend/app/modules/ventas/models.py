@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, Float, DateTime, ForeignKey, String
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 
 from backend.app.database import Base
 
@@ -11,9 +11,9 @@ class Venta(Base):
     usuario_id =  Column(Integer, ForeignKey("usuarios.id"), nullable=False)
     subtotal = Column(Float, nullable=False, default=0.0)
     impuesto = Column(Float, nullable=False, default=0.0)
-    Total = Column(Float, nullable=False, default=0.0)
+    total = Column(Float, nullable=False, default=0.0)
     estado = Column(String(20), default="COMPLETADA") # Completada Cancelada
-    fecha =  Column(DateTime, default=datetime.utcnow)
+    fecha =  Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     # Relaciones 
     detalles = relationship("DetalleVenta", back_populates="venta", cascade="all, delete-orphan")

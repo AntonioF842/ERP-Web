@@ -29,7 +29,7 @@ def procesar_venta(db: Session, venta_in: VentaCreate, usuario_id: int):
         detalle = DetalleVenta(
             producto_id=producto.id,
             cantidad=item.cantidad,
-            precio_unitario=producto.procesar_venta,
+            precio_unitario=producto.precio_venta,
             subtotal=linea_subtotal
         )
         detalles_db.append((detalle, producto))
@@ -43,7 +43,7 @@ def procesar_venta(db: Session, venta_in: VentaCreate, usuario_id: int):
         subtotal=subtotal_acumulado,
         impuesto=impusto_total,
         total=total_final,
-        estado="COMPLETADO"
+        estado="COMPLETADA"
     )
     db.add(db_venta)
     db.commit()
@@ -58,7 +58,7 @@ def procesar_venta(db: Session, venta_in: VentaCreate, usuario_id: int):
         mov_in = MovimientoCreate(
             producto_id=producto.id,
             tipo_movimiento="SALIDA",
-            cantidad=detalle.catidad,
+            cantidad=detalle.cantidad,
             motivo=f"Venta registrada ID {db_venta.id}"
         )
         registrar_movimiento(db=db, movimiento_in=mov_in)
