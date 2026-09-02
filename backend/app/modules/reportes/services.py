@@ -1,6 +1,5 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
-from datetime import datetime
 
 from backend.app.modules.inventario.models import Producto
 from backend.app.modules.ventas.models import Venta, DetalleVenta
@@ -12,7 +11,7 @@ def get_productos_stock_bajo(db: Session):
 # Resumen de ventas e ingresos
 def get_resumen_ventas(db: Session):
     total_ventas = db.query(func.count(Venta.id)).filter(Venta.estado == "COMPLETADA").scalar() or 0
-    ingresos_totales = db.query(func.sum(Venta.total)).filter(Venta.estado == "COMPLETADA").scalar or 0.0
+    ingresos_totales = db.query(func.sum(Venta.total)).filter(Venta.estado == "COMPLETADA").scalar() or 0.0
 
     return {
         "total_ventas_realizadas": total_ventas,

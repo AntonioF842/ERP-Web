@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from backend.app.database import get_db
-from backend.app.modules.reportes import services
+from backend.app.modules.reportes import services, schemas
 from backend.app.core.security import require_roles
 from backend.app.modules.usuarios.models import Usuario
 
@@ -13,7 +13,7 @@ router = APIRouter(
 )
 
 # Stock bajo
-@router.get("/stock-bajo")
+@router.get("/stock-bajo", response_model=List[schemas.ProductosStockBajoReponse])
 def obtener_alertas_stock(
     db: Session = Depends(get_db),
     _user: Usuario = Depends(require_roles(["admin", "almacen"]))
@@ -21,7 +21,7 @@ def obtener_alertas_stock(
     return services.get_productos_stock_bajo(db=db)
 
 # Resumen Financiero
-@router.get("/resumen")
+@router.get("/resumen", response_model=schemas.ResumenVentasResponse)
 def obtener_resumen_general(
     db: Session = Depends(get_db),
     _user: Usuario = Depends(require_roles(["admin"]))
@@ -29,7 +29,7 @@ def obtener_resumen_general(
     return services.get_resumen_ventas(db=db)
 
 # Top Productos
-@router.get("/top-productos")
+@router.get("/top-productos", response_model=List[schemas.ProductoTopResponse])
 def obtener_top_productos(
     limit: int = 5,
     db: Session = Depends(get_db),
