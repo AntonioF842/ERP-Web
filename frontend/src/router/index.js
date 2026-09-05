@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 
 import LoginView from '../views/LoginView.vue';
+import AppLayout from '../layouts/AppLayout.vue';
 import DashboardView from '../views/DashboardView.vue';
 
 const routes = [
@@ -12,14 +13,20 @@ const routes = [
         meta: { requiresAuth: false }
     },
     {
-        path: '/dashboard',
-        name: 'dashboard',
-        component: DashboardView,
-        meta: { requiresAuth: true }
-    },
-    {
         path: '/',
-        redirect: '/dashboard'
+        component: AppLayout,
+        meta: { requiresAuth: true },
+        children: [
+            {
+                path: 'dashboard',
+                name: 'dashboard',
+                component: DashboardView,
+            },
+            {
+            path: '',
+            redirect: '/dashboard'
+            }
+        ]
     }
 ]
 
