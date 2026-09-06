@@ -78,20 +78,27 @@
         </div>
 
         <div class="grid grid-cols-2 gap-4">
-          <div class="flex flex-col gap-2">
-            <label for="precio" class="font-semibold text-slate-700">Precio ($)</label>
-            <InputNumber id="precio" v-model="productoForm.precio" mode="currency" currency="USD" locale="en-US" :min="0" />
-          </div>
+            <div class="flex flex-col gap-2">
+                <label for="precio_venta" class="font-semibold text-slate-700">Precio Venta ($)</label>
+                <InputNumber id="precio_venta" v-model="productoForm.precio_venta" mode="currency" currency="USD" locale="en-US" :min="0" />
+            </div>
 
-          <div class="flex flex-col gap-2">
-            <label for="stock" class="font-semibold text-slate-700">Stock Inicial</label>
-            <InputNumber id="stock" v-model="productoForm.stock" :min="0" />
-          </div>
+            <div class="flex flex-col gap-2">
+                <label for="costo_compra" class="font-semibold text-slate-700">Costo Compra ($)</label>
+                <InputNumber id="costo_compra" v-model="productoForm.costo_compra" mode="currency" currency="USD" locale="en-US" :min="0" />
+            </div>
         </div>
 
-        <div class="flex flex-col gap-2">
-          <label for="stock_minimo" class="font-semibold text-slate-700">Stock Mínimo (Alerta)</label>
-          <InputNumber id="stock_minimo" v-model="productoForm.stock_minimo" :min="0" />
+        <div class="grid grid-cols-2 gap-4">
+            <div class="flex flex-col gap-2">
+                <label for="stock_actual" class="font-semibold text-slate-700">Stock Inicial</label>
+                <InputNumber id="stock_actual" v-model="productoForm.stock_actual" :min="0" />
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <label for="stock_minimo" class="font-semibold text-slate-700">Stock Mínimo</label>
+                <InputNumber id="stock_minimo" v-model="productoForm.stock_minimo" :min="0" />
+            </div>
         </div>
       </div>
 
@@ -127,8 +134,10 @@ const errorMessage = ref('');
 const productoForm = ref({
   sku: '',
   nombre: '',
-  precio: 0,
-  stock: 0,
+  descripcion: '',
+  precio_venta: 0,
+  costo_compra: 0,
+  stock_actual: 0,
   stock_minimo: 5
 });
 
@@ -167,16 +176,34 @@ const hideDialog = () => {
 const saveProducto = async () => {
   saving.value = true;
   errorMessage.value = '';
+  
+  const payload = {
+    sku: productoForm.value.sku,
+    nombre: productoForm.value.nombre,
+    descripcion: productoForm.value.descripcion || '',
+    precio_venta: Number(productoForm.value.precio_venta) || 0,
+    costo_compra: Number(productoForm.value.costo_compra) || 0,
+    stock_actual: Number(productoForm.value.stock_actual) || 0,
+    stock_minimo: Number(productoForm.value.stock_minimo) || 0
+  };
+
   try {
     if (isEdit.value) {
-      await api.put(`/inventario/productos/${selectedId.value}`, productoForm.value);
+      await api.put(`/inventario/productos/${selectedId.value}`, payload);
     } else {
-      await api.post('/inventario/productos', productoForm.value);
+      await api.post('/inventario/productos', payload);
     }
     productDialog.value = false;
     await cargarProductos();
   } catch (error) {
-    errorMessage.value = error.response?.data?.detail || 'Error al guardar el producto.';
+    if (error?.response?.status === 422) {
+      const details = error.response.data?.detail;
+      errorMessage.value = Array.isArray(details)
+        ? details.map(d => `${d.loc?.[d.loc.length - 1] || 'campo'}: ${d.msg}`).join(', ')
+        : 'Datos con formato inválido.';
+    } else {
+      errorMessage.value = error?.response?.data?.detail || error?.message || 'Error al guardar el producto.';
+    }
   } finally {
     saving.value = false;
   }
