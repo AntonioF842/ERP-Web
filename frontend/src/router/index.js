@@ -6,6 +6,7 @@ import AppLayout from '../layouts/AppLayout.vue';
 import DashboardView from '../views/DashboardView.vue';
 import InventoryView from '../views/InventarioView.vue';
 import VentasView from '../views/VentasView.vue';
+import ReportesView from '../views/ReportesView.vue';
 
 const routes = [
     {
@@ -33,6 +34,11 @@ const routes = [
                 path: 'ventas',
                 name: 'ventas',
                 component: VentasView
+            },
+            {
+                path: 'reportes',
+                name: 'reportes',
+                component: ReportesView
             },
             {
             path: '',
