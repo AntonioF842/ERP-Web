@@ -4,6 +4,7 @@ import { useAuthStore } from '../stores/auth';
 import LoginView from '../views/LoginView.vue';
 import AppLayout from '../layouts/AppLayout.vue';
 import DashboardView from '../views/DashboardView.vue';
+import InventoryView from '../views/InventarioView.vue';
 
 const routes = [
     {
@@ -21,6 +22,11 @@ const routes = [
                 path: 'dashboard',
                 name: 'dashboard',
                 component: DashboardView,
+            },
+            {
+                path: 'inventario',
+                name: 'inventario',
+                component: InventoryView
             },
             {
             path: '',
