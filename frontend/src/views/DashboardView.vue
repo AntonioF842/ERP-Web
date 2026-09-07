@@ -1,167 +1,117 @@
 <template>
-  <div class="space-y-6">
-    <!-- Bienvenida / Encabezado -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+  <div class="max-w-7xl mx-auto space-y-6">
+    <!-- Banner de Bienvenida -->
+    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div>
-        <h1 class="text-2xl font-bold text-slate-800">
+        <h1 class="text-2xl font-bold text-slate-900">
           ¡Hola de nuevo, {{ authStore.user?.nombre_completo || 'Usuario' }}! 
         </h1>
         <p class="text-slate-500 text-sm mt-1">
-          Aquí tienes un resumen general de la actividad y estado del ERP hoy.
+          Resumen operativo y métricas clave del sistema.
         </p>
       </div>
-      <div class="flex gap-3">
+      <div class="flex items-center gap-3 shrink-0">
         <router-link to="/ventas">
-          <Button label="Nueva Venta" icon="pi pi-shopping-cart" severity="primary" size="small" />
+          <Button label="Nueva Venta" icon="pi pi-shopping-cart" size="small" />
         </router-link>
         <router-link to="/inventario">
-          <Button label="Ver Inventario" icon="pi pi-box" severity="secondary" size="small" outlined />
+          <Button label="Ver Inventario" icon="pi pi-box" size="small" severity="secondary" outlined />
         </router-link>
       </div>
     </div>
 
-    <!-- Tarjetas de Métricas Clave -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <Card class="shadow-sm border-l-4 border-blue-500">
-        <template #content>
-          <div class="flex justify-between items-center">
-            <div>
-              <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Ingresos Totales</p>
-              <h3 class="text-2xl font-bold text-slate-800 mt-1">
-                ${{ Number(resumen.ingresos_totales || 0).toFixed(2) }}
-              </h3>
-            </div>
-            <div class="p-3 bg-blue-100 rounded-lg text-blue-600">
-              <i class="pi pi-dollar text-xl"></i>
-            </div>
-          </div>
-        </template>
-      </Card>
-
-      <Card class="shadow-sm border-l-4 border-green-500">
-        <template #content>
-          <div class="flex justify-between items-center">
-            <div>
-              <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Ventas Realizadas</p>
-              <h3 class="text-2xl font-bold text-slate-800 mt-1">
-                {{ resumen.total_ventas_realizadas || 0 }}
-              </h3>
-            </div>
-            <div class="p-3 bg-green-100 rounded-lg text-green-600">
-              <i class="pi pi-shopping-bag text-xl"></i>
-            </div>
-          </div>
-        </template>
-      </Card>
-
-      <Card class="shadow-sm border-l-4 border-purple-500">
-        <template #content>
-          <div class="flex justify-between items-center">
-            <div>
-              <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Top Producto</p>
-              <h3 class="text-lg font-bold text-slate-800 mt-1 truncate max-w-[120px]" :title="topProductoDestacado.nombre">
-                {{ topProductoDestacado.nombre || 'N/A' }}
-              </h3>
-            </div>
-            <div class="p-3 bg-purple-100 rounded-lg text-purple-600">
-              <i class="pi pi-star-fill text-xl"></i>
-            </div>
-          </div>
-        </template>
-      </Card>
-
-      <Card class="shadow-sm border-l-4 border-red-500">
-        <template #content>
-          <div class="flex justify-between items-center">
-            <div>
-              <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Alertas de Stock</p>
-              <h3 class="text-2xl font-bold text-slate-800 mt-1">
-                {{ stockBajo.length }}
-              </h3>
-            </div>
-            <div class="p-3 bg-red-100 rounded-lg text-red-600">
-              <i class="pi pi-exclamation-circle text-xl"></i>
-            </div>
-          </div>
-        </template>
-      </Card>
+    <!-- Grid de Métricas (4 Columnas) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <MetricCard 
+        title="Ingresos Totales" 
+        :value="`$${Number(resumen.ingresos_totales || 0).toFixed(2)}`"
+        subtitle="Ventas completadas"
+        icon="pi pi-dollar"
+        color-class="bg-emerald-50 text-emerald-600"
+      />
+      <MetricCard 
+        title="Ventas Realizadas" 
+        :value="resumen.total_ventas_realizadas || 0"
+        subtitle="Transacciones registradas"
+        icon="pi pi-shopping-bag"
+        color-class="bg-blue-50 text-blue-600"
+      />
+      <MetricCard 
+        title="Producto Estrella" 
+        :value="topProductoDestacado.nombre || 'N/A'"
+        subtitle="Mayor número de ventas"
+        icon="pi pi-star-fill"
+        color-class="bg-amber-50 text-amber-600"
+      />
+      <MetricCard 
+        title="Alertas de Stock" 
+        :value="stockBajo.length"
+        subtitle="Requieren reabastecimiento"
+        icon="pi pi-exclamation-triangle"
+        color-class="bg-rose-50 text-rose-600"
+      />
     </div>
 
-    <!-- Sección Inferior: Alertas Prioritarias y Accesos -->
+    <!-- Rejilla Principal: Tabla Reabastecimiento + Atajos -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <!-- Tabla Resumen: Alertas de Stock Bajo -->
-      <Card class="lg:col-span-2 shadow-sm">
-        <template #title>
-          <div class="flex justify-between items-center text-base font-bold text-slate-800">
-            <span class="flex items-center gap-2">
-              <i class="pi pi-exclamation-triangle text-red-500"></i>
-              Productos Requieren Reabastecimiento
-            </span>
-            <router-link to="/inventario" class="text-xs text-blue-600 hover:underline">Gestionar</router-link>
+      <!-- Tabla Stock Crítico (2 Columnas) -->
+      <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div class="flex items-center gap-2">
+            <i class="pi pi-box text-rose-500 text-lg"></i>
+            <h2 class="font-bold text-slate-800 text-base">Productos con Stock Crítico</h2>
           </div>
-        </template>
-        <template #content>
-          <DataTable :value="stockBajo" :loading="loading" class="p-datatable-sm" responsiveLayout="scroll">
-            <template #empty>
-              <div class="py-4 text-center text-slate-400">
-                <i class="pi pi-check-circle text-2xl text-green-500 mb-1"></i>
-                <p>El inventario no presenta productos en nivel crítico.</p>
-              </div>
+          <router-link to="/inventario" class="text-xs font-semibold text-blue-600 hover:text-blue-700">
+            Gestionar Todo →
+          </router-link>
+        </div>
+
+        <DataTable :value="stockBajo" :loading="loading" class="p-datatable-sm" responsiveLayout="scroll">
+          <template #empty>
+            <div class="py-6 text-center text-slate-400">
+              <i class="pi pi-check-circle text-3xl text-emerald-500 mb-2"></i>
+              <p class="text-sm font-medium">El inventario se encuentra en niveles óptimos.</p>
+            </div>
+          </template>
+          <Column field="sku" header="SKU" class="font-mono text-xs text-slate-500"></Column>
+          <Column field="nombre" header="Producto" class="font-medium text-slate-800"></Column>
+          <Column field="stock_actual" header="Stock Actual">
+            <template #body="slotProps">
+              <Tag :value="slotProps.data.stock_actual" severity="danger" />
             </template>
-            <Column field="sku" header="SKU"></Column>
-            <Column field="nombre" header="Producto"></Column>
-            <Column field="stock_actual" header="Stock Dispo.">
-              <template #body="slotProps">
-                <Tag :value="slotProps.data.stock_actual" severity="danger" />
-              </template>
-            </Column>
-            <Column field="stock_minimo" header="Stock Mínimo"></Column>
-          </DataTable>
-        </template>
-      </Card>
+          </Column>
+          <Column field="stock_minimo" header="Stock Mínimo" class="text-slate-500"></Column>
+        </DataTable>
+      </div>
 
-      <!-- Panel Lateral de Atajos -->
-      <Card class="shadow-sm">
-        <template #title>
-          <span class="text-base font-bold text-slate-800">Accesos Rápidos</span>
-        </template>
-        <template #content>
-          <div class="flex flex-col gap-3">
-            <router-link to="/ventas" class="p-3 rounded-lg border border-slate-200 hover:border-blue-500 hover:bg-blue-50/50 transition-all flex items-center justify-between group">
-              <div class="flex items-center gap-3">
-                <i class="pi pi-shopping-cart text-blue-600 text-lg"></i>
-                <div>
-                  <p class="font-semibold text-slate-800 text-sm">Ir a Terminal POS</p>
-                  <p class="text-xs text-slate-500">Registrar una nueva transacción</p>
-                </div>
-              </div>
-              <i class="pi pi-chevron-right text-slate-400 group-hover:text-blue-600"></i>
-            </router-link>
+      <!-- Panel de Atajos Rápidos (1 Columna) -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
+        <div class="border-b border-slate-100 pb-3">
+          <h2 class="font-bold text-slate-800 text-base">Accesos Rápidos</h2>
+          <p class="text-xs text-slate-400">Atajos directos a las operaciones habituales</p>
+        </div>
 
-            <router-link to="/inventario" class="p-3 rounded-lg border border-slate-200 hover:border-blue-500 hover:bg-blue-50/50 transition-all flex items-center justify-between group">
-              <div class="flex items-center gap-3">
-                <i class="pi pi-box text-blue-600 text-lg"></i>
-                <div>
-                  <p class="font-semibold text-slate-800 text-sm">Crear Producto</p>
-                  <p class="text-xs text-slate-500">Añadir items al catálogo</p>
-                </div>
-              </div>
-              <i class="pi pi-chevron-right text-slate-400 group-hover:text-blue-600"></i>
-            </router-link>
-
-            <router-link to="/reportes" class="p-3 rounded-lg border border-slate-200 hover:border-blue-500 hover:bg-blue-50/50 transition-all flex items-center justify-between group">
-              <div class="flex items-center gap-3">
-                <i class="pi pi-chart-bar text-blue-600 text-lg"></i>
-                <div>
-                  <p class="font-semibold text-slate-800 text-sm">Reportes Detallados</p>
-                  <p class="text-xs text-slate-500">Analítica avanzada del negocio</p>
-                </div>
-              </div>
-              <i class="pi pi-chevron-right text-slate-400 group-hover:text-blue-600"></i>
-            </router-link>
-          </div>
-        </template>
-      </Card>
+        <div class="space-y-3">
+          <QuickAccessCard 
+            to="/ventas" 
+            title="Terminal POS" 
+            description="Registrar nueva venta" 
+            icon="pi pi-shopping-cart" 
+          />
+          <QuickAccessCard 
+            to="/inventario" 
+            title="Gestión de Productos" 
+            description="Añadir o modificar catálogo" 
+            icon="pi pi-tags" 
+          />
+          <QuickAccessCard 
+            to="/reportes" 
+            title="Reportes General" 
+            description="Métricas y estadísticas del negocio" 
+            icon="pi pi-chart-line" 
+          />
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -170,7 +120,8 @@
 import { ref, computed, onMounted } from 'vue';
 import { useAuthStore } from '../stores/auth';
 import api from '../api/axios';
-import Card from 'primevue/card';
+import MetricCard from '../components/MetricCard.vue';
+import QuickAccessCard from '../components/QuickAccessCard.vue';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Tag from 'primevue/tag';

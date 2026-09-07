@@ -1,59 +1,104 @@
 <template>
-  <div class="space-y-6">
+  <div class="max-w-7xl mx-auto space-y-6">
     <!-- Encabezado de Sección -->
-    <div class="flex items-center justify-between">
+    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div>
-        <h1 class="text-2xl font-bold text-slate-800">Gestión de Inventario</h1>
-        <p class="text-slate-500 text-sm">Administra los productos y existencias de la empresa</p>
+        <h1 class="text-2xl font-bold text-slate-900">Gestión de Inventario</h1>
+        <p class="text-slate-500 text-sm mt-1">Administra los productos, precios y existencias en tiempo real</p>
       </div>
-      <Button label="Nuevo Producto" icon="pi pi-plus" class="p-button-primary" @click="openNewModal" />
+      <Button label="Nuevo Producto" icon="pi pi-plus" class="p-button-primary shrink-0" @click="openNewModal" />
     </div>
 
-    <!-- Tabla de Productos -->
-    <Card class="shadow-sm">
-      <template #content>
-        <DataTable 
-          :value="productos" 
-          :loading="loading" 
-          paginator 
-          :rows="10" 
-          dataKey="id"
-          class="p-datatable-sm"
-        >
-          <template #header>
-            <div class="flex justify-between items-center">
-              <span class="text-lg font-semibold text-slate-700">Listado de Productos</span>
-              <Button icon="pi pi-refresh" text rounded @click="cargarProductos" />
-            </div>
+    <!-- Indicadores Rápidos -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Productos</p>
+          <h3 class="text-2xl font-extrabold text-slate-800 mt-1">{{ productos.length }}</h3>
+        </div>
+        <div class="p-3.5 bg-blue-50 text-blue-600 rounded-xl">
+          <i class="pi pi-box text-xl"></i>
+        </div>
+      </div>
+
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Stock en Alerta</p>
+          <h3 class="text-2xl font-extrabold text-slate-800 mt-1">{{ productosCriticos }}</h3>
+        </div>
+        <div class="p-3.5 bg-rose-50 text-rose-600 rounded-xl">
+          <i class="pi pi-exclamation-triangle text-xl"></i>
+        </div>
+      </div>
+
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Valor Estimado</p>
+          <h3 class="text-2xl font-extrabold text-slate-800 mt-1">${{ valorTotalInventario.toFixed(2) }}</h3>
+        </div>
+        <div class="p-3.5 bg-emerald-50 text-emerald-600 rounded-xl">
+          <i class="pi pi-dollar text-xl"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabla Principal de Productos -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+        <div class="flex items-center gap-2">
+          <i class="pi pi-list text-slate-500 text-lg"></i>
+          <h2 class="font-bold text-slate-800 text-base">Catálogo de Productos</h2>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="p-input-icon-left w-full sm:w-64">
+            <InputText v-model="filterText" placeholder="Buscar por SKU o Nombre..." class="p-inputtext-sm w-full" />
+          </span>
+          <Button icon="pi pi-refresh" severity="secondary" outlined rounded size="small" @click="cargarProductos" />
+        </div>
+      </div>
+
+      <DataTable 
+        :value="productosFiltrados" 
+        :loading="loading" 
+        paginator 
+        :rows="8" 
+        dataKey="id"
+        class="p-datatable-sm"
+        responsiveLayout="scroll"
+      >
+        <template #empty>
+          <div class="py-8 text-center text-slate-400 text-sm">
+            No se encontraron productos registrados en el inventario.
+          </div>
+        </template>
+
+        <Column field="sku" header="SKU" sortable class="font-mono text-xs text-slate-500"></Column>
+        <Column field="nombre" header="Nombre" sortable class="font-medium text-slate-800"></Column>
+        <Column field="precio_venta" header="Precio Venta" sortable>
+          <template #body="slotProps">
+            <span class="font-semibold text-slate-700">${{ Number(slotProps.data.precio_venta || 0).toFixed(2) }}</span>
           </template>
-
-          <template #empty> No se encontraron productos registrados. </template>
-
-          <Column field="sku" header="SKU" sortable></Column>
-          <Column field="nombre" header="Nombre" sortable></Column>
-          <Column field="precio" header="Precio" sortable>
-            <template #body="slotProps">
-              ${{ Number(slotProps.data.precio).toFixed(2) }}
-            </template>
-          </Column>
-          <Column field="stock" header="Stock" sortable>
-            <template #body="slotProps">
-              <Tag 
-                :value="slotProps.data.stock" 
-                :severity="slotProps.data.stock <= slotProps.data.stock_minimo ? 'danger' : 'success'" 
-              />
-            </template>
-          </Column>
-          <Column header="Acciones" style="width: 10rem">
-            <template #body="slotProps">
-              <div class="flex gap-2">
-                <Button icon="pi pi-pencil" severity="warn" text rounded @click="editProducto(slotProps.data)" />
-              </div>
-            </template>
-          </Column>
-        </DataTable>
-      </template>
-    </Card>
+        </Column>
+        <Column field="costo_compra" header="Costo Compra" sortable>
+          <template #body="slotProps">
+            <span class="text-slate-500">${{ Number(slotProps.data.costo_compra || 0).toFixed(2) }}</span>
+          </template>
+        </Column>
+        <Column field="stock_actual" header="Stock" sortable>
+          <template #body="slotProps">
+            <Tag 
+              :value="slotProps.data.stock_actual" 
+              :severity="slotProps.data.stock_actual <= slotProps.data.stock_minimo ? 'danger' : 'success'" 
+            />
+          </template>
+        </Column>
+        <Column header="Acciones" style="width: 6rem" class="text-center">
+          <template #body="slotProps">
+            <Button icon="pi pi-pencil" severity="secondary" text rounded size="small" @click="editProducto(slotProps.data)" />
+          </template>
+        </Column>
+      </DataTable>
+    </div>
 
     <!-- Modal Formulario (Crear / Editar) -->
     <Dialog 
@@ -67,53 +112,54 @@
           {{ errorMessage }}
         </Message>
 
-        <div class="flex flex-col gap-2">
-          <label for="sku" class="font-semibold text-slate-700">SKU / Código</label>
-          <InputText id="sku" v-model.trim="productoForm.sku" required autofocus />
+        <div class="flex flex-col gap-1.5">
+          <label for="sku" class="font-semibold text-slate-700 text-sm">SKU / Código Único</label>
+          <InputText id="sku" v-model.trim="productoForm.sku" required autofocus placeholder="Ej: PROD-001" />
         </div>
 
-        <div class="flex flex-col gap-2">
-          <label for="nombre" class="font-semibold text-slate-700">Nombre del Producto</label>
-          <InputText id="nombre" v-model.trim="productoForm.nombre" required />
-        </div>
-
-        <div class="grid grid-cols-2 gap-4">
-            <div class="flex flex-col gap-2">
-                <label for="precio_venta" class="font-semibold text-slate-700">Precio Venta ($)</label>
-                <InputNumber id="precio_venta" v-model="productoForm.precio_venta" mode="currency" currency="USD" locale="en-US" :min="0" />
-            </div>
-
-            <div class="flex flex-col gap-2">
-                <label for="costo_compra" class="font-semibold text-slate-700">Costo Compra ($)</label>
-                <InputNumber id="costo_compra" v-model="productoForm.costo_compra" mode="currency" currency="USD" locale="en-US" :min="0" />
-            </div>
+        <div class="flex flex-col gap-1.5">
+          <label for="nombre" class="font-semibold text-slate-700 text-sm">Nombre del Producto</label>
+          <InputText id="nombre" v-model.trim="productoForm.nombre" required placeholder="Nombre descriptivo" />
         </div>
 
         <div class="grid grid-cols-2 gap-4">
-            <div class="flex flex-col gap-2">
-                <label for="stock_actual" class="font-semibold text-slate-700">Stock Inicial</label>
-                <InputNumber id="stock_actual" v-model="productoForm.stock_actual" :min="0" />
-            </div>
+          <div class="flex flex-col gap-1.5">
+            <label for="precio_venta" class="font-semibold text-slate-700 text-sm">Precio Venta ($)</label>
+            <InputNumber id="precio_venta" v-model="productoForm.precio_venta" mode="currency" currency="USD" locale="en-US" :min="0" />
+          </div>
 
-            <div class="flex flex-col gap-2">
-                <label for="stock_minimo" class="font-semibold text-slate-700">Stock Mínimo</label>
-                <InputNumber id="stock_minimo" v-model="productoForm.stock_minimo" :min="0" />
-            </div>
+          <div class="flex flex-col gap-1.5">
+            <label for="costo_compra" class="font-semibold text-slate-700 text-sm">Costo Compra ($)</label>
+            <InputNumber id="costo_compra" v-model="productoForm.costo_compra" mode="currency" currency="USD" locale="en-US" :min="0" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="flex flex-col gap-1.5">
+            <label for="stock_actual" class="font-semibold text-slate-700 text-sm">Stock Inicial</label>
+            <InputNumber id="stock_actual" v-model="productoForm.stock_actual" :min="0" />
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <label for="stock_minimo" class="font-semibold text-slate-700 text-sm">Stock Mínimo (Alerta)</label>
+            <InputNumber id="stock_minimo" v-model="productoForm.stock_minimo" :min="0" />
+          </div>
         </div>
       </div>
 
       <template #footer>
-        <Button label="Cancelar" icon="pi pi-times" text @click="hideDialog" />
-        <Button label="Guardar" icon="pi pi-check" :loading="saving" @click="saveProducto" />
+        <div class="flex justify-end gap-2 pt-2">
+          <Button label="Cancelar" icon="pi pi-times" text severity="secondary" @click="hideDialog" />
+          <Button label="Guardar" icon="pi pi-check" :loading="saving" @click="saveProducto" />
+        </div>
       </template>
     </Dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import api from '../api/axios';
-import Card from 'primevue/card';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
@@ -124,6 +170,7 @@ import InputNumber from 'primevue/inputnumber';
 import Message from 'primevue/message';
 
 const productos = ref([]);
+const filterText = ref('');
 const loading = ref(false);
 const saving = ref(false);
 const productDialog = ref(false);
@@ -139,6 +186,22 @@ const productoForm = ref({
   costo_compra: 0,
   stock_actual: 0,
   stock_minimo: 5
+});
+
+const productosFiltrados = computed(() => {
+  if (!filterText.value.trim()) return productos.value;
+  const term = filterText.value.toLowerCase();
+  return productos.value.filter(
+    p => p.nombre.toLowerCase().includes(term) || p.sku.toLowerCase().includes(term)
+  );
+});
+
+const productosCriticos = computed(() => {
+  return productos.value.filter(p => p.stock_actual <= p.stock_minimo).length;
+});
+
+const valorTotalInventario = computed(() => {
+  return productos.value.reduce((acc, p) => acc + (p.precio_venta * p.stock_actual), 0);
 });
 
 const cargarProductos = async () => {
@@ -157,7 +220,7 @@ const openNewModal = () => {
   isEdit.value = false;
   selectedId.value = null;
   errorMessage.value = '';
-  productoForm.value = { sku: '', nombre: '', precio: 0, stock: 0, stock_minimo: 5 };
+  productoForm.value = { sku: '', nombre: '', descripcion: '', precio_venta: 0, costo_compra: 0, stock_actual: 0, stock_minimo: 5 };
   productDialog.value = true;
 };
 
