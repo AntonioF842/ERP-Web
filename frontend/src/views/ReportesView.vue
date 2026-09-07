@@ -1,48 +1,100 @@
 <template>
   <div class="max-w-7xl mx-auto space-y-6">
-    <!-- Encabezado -->
-    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+    <!-- Encabezado y Acciones -->
+    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div>
-        <h1 class="text-2xl font-bold text-slate-800">Reportes & Analíticas</h1>
-        <p class="text-slate-500 text-sm mt-1">Resumen ejecutivo, productos más vendidos y alertas de stock</p>
+        <h1 class="text-2xl font-bold text-slate-900">Reportes & Business Intelligence</h1>
+        <p class="text-slate-500 text-sm mt-1">Monitorea el rendimiento financiero, analiza tendencias e inventario</p>
       </div>
-      <Button icon="pi pi-refresh" label="Actualizar" severity="secondary" text @click="cargarReportes" />
-    </div>
-
-    <!-- Indicadores Financieros (KPIs) -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div class="bg-white p-6 rounded-2xl border border-slate-200 border-l-4 border-l-blue-500 shadow-sm flex items-center justify-between">
-        <div>
-          <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Ingresos Totales</p>
-          <h3 class="text-3xl font-black text-slate-800 mt-2">
-            ${{ Number(resumen.ingresos_totales || 0).toFixed(2) }}
-          </h3>
-        </div>
-        <div class="p-4 bg-blue-50 text-blue-600 rounded-xl">
-          <i class="pi pi-dollar text-2xl"></i>
-        </div>
-      </div>
-
-      <div class="bg-white p-6 rounded-2xl border border-slate-200 border-l-4 border-l-emerald-500 shadow-sm flex items-center justify-between">
-        <div>
-          <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Ventas Completadas</p>
-          <h3 class="text-3xl font-black text-slate-800 mt-2">
-            {{ resumen.total_ventas_realizadas || 0 }}
-          </h3>
-        </div>
-        <div class="p-4 bg-emerald-50 text-emerald-600 rounded-xl">
-          <i class="pi pi-shopping-bag text-2xl"></i>
-        </div>
+      <div class="flex items-center gap-3 shrink-0">
+        <Button label="Exportar CSV" icon="pi pi-download" severity="secondary" outlined size="small" @click="exportarCSV" />
+        <Button label="Actualizar" icon="pi pi-refresh" size="small" @click="cargarReportes" />
       </div>
     </div>
 
-    <!-- Tablas de Información -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <!-- Tabla: Top Productos Más Vendidos -->
+    <!-- Indicadores Financieros Extendidos (KPIs) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 border-l-4 border-l-blue-500 shadow-sm flex items-center justify-between">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Ingresos Totales</p>
+          <h3 class="text-2xl font-black text-slate-800 mt-1">${{ Number(resumen.ingresos_totales || 0).toFixed(2) }}</h3>
+        </div>
+        <div class="p-3.5 bg-blue-50 text-blue-600 rounded-xl">
+          <i class="pi pi-dollar text-xl"></i>
+        </div>
+      </div>
+
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 border-l-4 border-l-emerald-500 shadow-sm flex items-center justify-between">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Ventas Completadas</p>
+          <h3 class="text-2xl font-black text-slate-800 mt-1">{{ resumen.total_ventas_realizadas || 0 }}</h3>
+        </div>
+        <div class="p-3.5 bg-emerald-50 text-emerald-600 rounded-xl">
+          <i class="pi pi-shopping-bag text-xl"></i>
+        </div>
+      </div>
+
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 border-l-4 border-l-indigo-500 shadow-sm flex items-center justify-between">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Ticket Promedio</p>
+          <h3 class="text-2xl font-black text-slate-800 mt-1">${{ ticketPromedio.toFixed(2) }}</h3>
+        </div>
+        <div class="p-3.5 bg-indigo-50 text-indigo-600 rounded-xl">
+          <i class="pi pi-calculator text-xl"></i>
+        </div>
+      </div>
+
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 border-l-4 border-l-rose-500 shadow-sm flex items-center justify-between">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Alertas de Stock</p>
+          <h3 class="text-2xl font-black text-slate-800 mt-1">{{ stockBajo.length }}</h3>
+        </div>
+        <div class="p-3.5 bg-rose-50 text-rose-600 rounded-xl">
+          <i class="pi pi-exclamation-triangle text-xl"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sección de Gráficos Visuales -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Gráfico de Productos Más Vendidos (2/3) -->
+      <div class="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div class="flex items-center gap-2">
+            <i class="pi pi-chart-bar text-blue-600 text-lg"></i>
+            <h2 class="font-bold text-slate-800 text-base">Unidades Vendidas por Producto (Top)</h2>
+          </div>
+        </div>
+        <div class="h-64 flex items-center justify-center">
+          <Chart v-if="topProductos.length > 0" type="bar" :data="chartDataBar" :options="chartOptionsBar" class="w-full h-full" />
+          <p v-else class="text-sm text-slate-400">No hay suficientes datos para generar el gráfico.</p>
+        </div>
+      </div>
+
+      <!-- Gráfico de Distribución de Recaudación (1/3) -->
       <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-        <div class="flex items-center gap-2 pb-3 border-b border-slate-100">
-          <i class="pi pi-star-fill text-amber-500 text-lg"></i>
-          <h2 class="font-bold text-slate-800 text-base">Top Productos Más Vendidos</h2>
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div class="flex items-center gap-2">
+            <i class="pi pi-chart-pie text-emerald-600 text-lg"></i>
+            <h2 class="font-bold text-slate-800 text-base">Ingresos por Producto</h2>
+          </div>
+        </div>
+        <div class="h-64 flex items-center justify-center">
+          <Chart v-if="topProductos.length > 0" type="doughnut" :data="chartDataPie" :options="chartOptionsPie" class="w-full h-full" />
+          <p v-else class="text-sm text-slate-400">Sin datos de recaudación.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tablas de Información Detallada -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Tabla Top Productos -->
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div class="flex items-center gap-2">
+            <i class="pi pi-star-fill text-amber-500 text-lg"></i>
+            <h2 class="font-bold text-slate-800 text-base">Top Productos Más Vendidos</h2>
+          </div>
         </div>
         
         <DataTable :value="topProductos" :loading="loading" class="p-datatable-sm" responsiveLayout="scroll">
@@ -54,17 +106,19 @@
           <Column field="total_vendido" header="Vendidos" sortable></Column>
           <Column field="total_recaudado" header="Recaudado" sortable>
             <template #body="slotProps">
-              ${{ Number(slotProps.data.total_recaudado || 0).toFixed(2) }}
+              <span class="font-semibold text-emerald-600">${{ Number(slotProps.data.total_recaudado || 0).toFixed(2) }}</span>
             </template>
           </Column>
         </DataTable>
       </div>
 
-      <!-- Tabla: Alertas de Stock Bajo -->
+      <!-- Tabla Alertas de Stock Bajo -->
       <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-        <div class="flex items-center gap-2 pb-3 border-b border-slate-100">
-          <i class="pi pi-exclamation-triangle text-rose-500 text-lg"></i>
-          <h2 class="font-bold text-slate-800 text-base">Alertas de Stock Bajo</h2>
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div class="flex items-center gap-2">
+            <i class="pi pi-exclamation-triangle text-rose-500 text-lg"></i>
+            <h2 class="font-bold text-slate-800 text-base">Alertas de Stock Bajo</h2>
+          </div>
         </div>
 
         <DataTable :value="stockBajo" :loading="loading" class="p-datatable-sm" responsiveLayout="scroll">
@@ -86,17 +140,67 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import api from '../api/axios';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Tag from 'primevue/tag';
 import Button from 'primevue/button';
+import Chart from 'primevue/chart';
 
 const resumen = ref({ total_ventas_realizadas: 0, ingresos_totales: 0 });
 const topProductos = ref([]);
 const stockBajo = ref([]);
 const loading = ref(false);
+
+const ticketPromedio = computed(() => {
+  if (!resumen.value.total_ventas_realizadas) return 0;
+  return resumen.value.ingresos_totales / resumen.value.total_ventas_realizadas;
+});
+
+// Configuración de Gráfica de Barras (Top Vendidos)
+const chartDataBar = computed(() => ({
+  labels: topProductos.value.map(p => p.nombre),
+  datasets: [
+    {
+      label: 'Unidades Vendidas',
+      backgroundColor: '#3b82f6',
+      borderRadius: 8,
+      data: topProductos.value.map(p => p.total_vendido)
+    }
+  ]
+}));
+
+const chartOptionsBar = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: { display: false }
+  },
+  scales: {
+    y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+    x: { grid: { display: false } }
+  }
+};
+
+// Configuración de Gráfica de Dona (Ingresos)
+const chartDataPie = computed(() => ({
+  labels: topProductos.value.map(p => p.nombre),
+  datasets: [
+    {
+      data: topProductos.value.map(p => p.total_recaudado),
+      backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
+    }
+  ]
+}));
+
+const chartOptionsPie = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: { position: 'bottom' }
+  }
+};
 
 const cargarReportes = async () => {
   loading.value = true;
@@ -115,6 +219,24 @@ const cargarReportes = async () => {
   } finally {
     loading.value = false;
   }
+};
+
+// Función para exportar a archivo CSV
+const exportarCSV = () => {
+  if (topProductos.value.length === 0) return;
+  
+  let csvContent = "data:text/csv;charset=utf-8,SKU,Producto,Total Vendido,Total Recaudado ($)\n";
+  topProductos.value.forEach(p => {
+    csvContent += `${p.sku},${p.nombre},${p.total_vendido},${p.total_recaudado}\n`;
+  });
+
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", `reporte_top_productos_${new Date().toISOString().slice(0,10)}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 };
 
 onMounted(() => {
