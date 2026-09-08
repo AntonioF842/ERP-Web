@@ -1,18 +1,31 @@
 <template>
   <div class="max-w-7xl mx-auto space-y-6">
-    <!-- Encabezado y Acciones -->
+    <!-- Encabezado y Filtros por Período -->
     <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div>
         <h1 class="text-2xl font-bold text-slate-900">Reportes & Business Intelligence</h1>
-        <p class="text-slate-500 text-sm mt-1">Monitorea el rendimiento financiero, analiza tendencias e inventario</p>
+        <p class="text-slate-500 text-sm mt-1">Análisis de rendimiento por intervalo de tiempo</p>
       </div>
-      <div class="flex items-center gap-3 shrink-0">
-        <Button label="Exportar CSV" icon="pi pi-download" severity="secondary" outlined size="small" @click="exportarCSV" />
-        <Button label="Actualizar" icon="pi pi-refresh" size="small" @click="cargarReportes" />
+
+      <!-- Selector de Período -->
+      <div class="flex items-center gap-2 bg-slate-100 p-1 rounded-xl">
+        <button 
+          v-for="opcion in periodos" 
+          :key="opcion.value"
+          @click="cambiarPeriodo(opcion.value)"
+          :class="[
+            'px-3 py-1.5 text-xs font-semibold rounded-lg transition-all',
+            periodoSeleccionado === opcion.value 
+              ? 'bg-white text-blue-600 shadow-sm' 
+              : 'text-slate-500 hover:text-slate-800'
+          ]"
+        >
+          {{ opcion.label }}
+        </button>
       </div>
     </div>
 
-    <!-- Indicadores Financieros Extendidos (KPIs) -->
+    <!-- Indicadores Financieros (KPIs) -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
       <div class="bg-white p-5 rounded-2xl border border-slate-200 border-l-4 border-l-blue-500 shadow-sm flex items-center justify-between">
         <div>
@@ -55,51 +68,49 @@
       </div>
     </div>
 
-    <!-- Sección de Gráficos Visuales -->
+    <!-- Sección de Gráficos -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <!-- Gráfico de Productos Más Vendidos (2/3) -->
       <div class="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
           <div class="flex items-center gap-2">
             <i class="pi pi-chart-bar text-blue-600 text-lg"></i>
-            <h2 class="font-bold text-slate-800 text-base">Unidades Vendidas por Producto (Top)</h2>
+            <h2 class="font-bold text-slate-800 text-base">Unidades Vendidas ({{ etiquetaPeriodo }})</h2>
           </div>
         </div>
         <div class="h-64 flex items-center justify-center">
           <Chart v-if="topProductos.length > 0" type="bar" :data="chartDataBar" :options="chartOptionsBar" class="w-full h-full" />
-          <p v-else class="text-sm text-slate-400">No hay suficientes datos para generar el gráfico.</p>
+          <p v-else class="text-sm text-slate-400">No hay transacciones registradas en este período.</p>
         </div>
       </div>
 
-      <!-- Gráfico de Distribución de Recaudación (1/3) -->
       <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
           <div class="flex items-center gap-2">
             <i class="pi pi-chart-pie text-emerald-600 text-lg"></i>
-            <h2 class="font-bold text-slate-800 text-base">Ingresos por Producto</h2>
+            <h2 class="font-bold text-slate-800 text-base">Distribución de Ingresos</h2>
           </div>
         </div>
         <div class="h-64 flex items-center justify-center">
           <Chart v-if="topProductos.length > 0" type="doughnut" :data="chartDataPie" :options="chartOptionsPie" class="w-full h-full" />
-          <p v-else class="text-sm text-slate-400">Sin datos de recaudación.</p>
+          <p v-else class="text-sm text-slate-400">Sin datos de recaudación en este período.</p>
         </div>
       </div>
     </div>
 
     <!-- Tablas de Información Detallada -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <!-- Tabla Top Productos -->
       <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
           <div class="flex items-center gap-2">
             <i class="pi pi-star-fill text-amber-500 text-lg"></i>
-            <h2 class="font-bold text-slate-800 text-base">Top Productos Más Vendidos</h2>
+            <h2 class="font-bold text-slate-800 text-base">Top Productos ({{ etiquetaPeriodo }})</h2>
           </div>
+          <Button label="CSV" icon="pi pi-download" severity="secondary" text size="small" @click="exportarCSV" />
         </div>
         
         <DataTable :value="topProductos" :loading="loading" class="p-datatable-sm" responsiveLayout="scroll">
           <template #empty>
-            <div class="py-6 text-center text-slate-400 text-sm">No hay ventas completadas registradas.</div>
+            <div class="py-6 text-center text-slate-400 text-sm">No hay ventas registradas en este rango.</div>
           </template>
           <Column field="sku" header="SKU" class="font-mono text-xs text-slate-500"></Column>
           <Column field="nombre" header="Producto" class="font-medium text-slate-800"></Column>
@@ -112,7 +123,6 @@
         </DataTable>
       </div>
 
-      <!-- Tabla Alertas de Stock Bajo -->
       <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
           <div class="flex items-center gap-2">
@@ -148,23 +158,35 @@ import Tag from 'primevue/tag';
 import Button from 'primevue/button';
 import Chart from 'primevue/chart';
 
+const periodoSeleccionado = ref('mes');
 const resumen = ref({ total_ventas_realizadas: 0, ingresos_totales: 0 });
 const topProductos = ref([]);
 const stockBajo = ref([]);
 const loading = ref(false);
+
+const periodos = [
+  { label: 'Semana', value: 'semana' },
+  { label: 'Mes', value: 'mes' },
+  { label: 'Año', value: 'anio' },
+  { label: 'Todo', value: 'todos' }
+];
+
+const etiquetaPeriodo = computed(() => {
+  const p = periodos.find(item => item.value === periodoSeleccionado.value);
+  return p ? p.label : '';
+});
 
 const ticketPromedio = computed(() => {
   if (!resumen.value.total_ventas_realizadas) return 0;
   return resumen.value.ingresos_totales / resumen.value.total_ventas_realizadas;
 });
 
-// Configuración de Gráfica de Barras (Top Vendidos)
 const chartDataBar = computed(() => ({
   labels: topProductos.value.map(p => p.nombre),
   datasets: [
     {
       label: 'Unidades Vendidas',
-      backgroundColor: '#3b82f6',
+      backgroundColor: '#2563eb',
       borderRadius: 8,
       data: topProductos.value.map(p => p.total_vendido)
     }
@@ -174,22 +196,19 @@ const chartDataBar = computed(() => ({
 const chartOptionsBar = {
   responsive: true,
   maintainAspectRatio: false,
-  plugins: {
-    legend: { display: false }
-  },
+  plugins: { legend: { display: false } },
   scales: {
     y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
     x: { grid: { display: false } }
   }
 };
 
-// Configuración de Gráfica de Dona (Ingresos)
 const chartDataPie = computed(() => ({
   labels: topProductos.value.map(p => p.nombre),
   datasets: [
     {
       data: topProductos.value.map(p => p.total_recaudado),
-      backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
+      backgroundColor: ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
     }
   ]
 }));
@@ -197,17 +216,20 @@ const chartDataPie = computed(() => ({
 const chartOptionsPie = {
   responsive: true,
   maintainAspectRatio: false,
-  plugins: {
-    legend: { position: 'bottom' }
-  }
+  plugins: { legend: { position: 'bottom' } }
+};
+
+const cambiarPeriodo = (nuevoPeriodo) => {
+  periodoSeleccionado.value = nuevoPeriodo;
+  cargarReportes();
 };
 
 const cargarReportes = async () => {
   loading.value = true;
   try {
     const [resumenRes, topRes, stockBajoRes] = await Promise.all([
-      api.get('/reportes/resumen'),
-      api.get('/reportes/top-productos'),
+      api.get(`/reportes/resumen?periodo=${periodoSeleccionado.value}`),
+      api.get(`/reportes/top-productos?periodo=${periodoSeleccionado.value}`),
       api.get('/reportes/stock-bajo')
     ]);
 
@@ -221,7 +243,6 @@ const cargarReportes = async () => {
   }
 };
 
-// Función para exportar a archivo CSV
 const exportarCSV = () => {
   if (topProductos.value.length === 0) return;
   
@@ -233,7 +254,7 @@ const exportarCSV = () => {
   const encodedUri = encodeURI(csvContent);
   const link = document.createElement("a");
   link.setAttribute("href", encodedUri);
-  link.setAttribute("download", `reporte_top_productos_${new Date().toISOString().slice(0,10)}.csv`);
+  link.setAttribute("download", `reporte_${periodoSeleccionado.value}_${new Date().toISOString().slice(0,10)}.csv`);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);

@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
 
@@ -8,19 +9,39 @@ from backend.app.modules.ventas.models import Venta, DetalleVenta
 def get_productos_stock_bajo(db: Session):
     return db.query(Producto).filter(Producto.stock_actual <= Producto.stock_minimo).all()
 
+def _obtener_fecha_inicio(periodo: str):
+    ahora = datetime.now(timezone.utc)
+    if periodo == "semana":
+        return ahora - timedelta(days=7)
+    elif periodo == "mes":
+        return ahora - timedelta(days=30)
+    elif periodo == "anio":
+        return ahora - timedelta(days=365)
+    return None
+
 # Resumen de ventas e ingresos
-def get_resumen_ventas(db: Session):
-    total_ventas = db.query(func.count(Venta.id)).filter(Venta.estado == "COMPLETADA").scalar() or 0
-    ingresos_totales = db.query(func.sum(Venta.total)).filter(Venta.estado == "COMPLETADA").scalar() or 0.0
+def get_resumen_ventas(db: Session, periodo: str = "todos"):
+    query = db.query(
+        func.count(Venta.id).label("total_ventas"),
+        func.sum(Venta.total).label("ingresos")
+    ).filter(Venta.estado == "COMPLETADA")
+
+    fecha_inicio = _obtener_fecha_inicio(periodo)
+    if fecha_inicio:
+        query = query.filter(Venta.fecha >= fecha_inicio)
+
+    resultado = query.first()
+    total_ventas = resultado.total_ventas or 0
+    ingresos_total = resultado.ingresos or 0.0
 
     return {
         "total_ventas_realizadas": total_ventas,
-        "ingresos_totales": round(ingresos_totales, 2)
+        "ingresos_totales": round(ingresos_total, 2)
     }
 
 # Top productos mas vendidos 
-def get_top_productos(db: Session, limit: int = 5):
-    resultados = (
+def get_top_productos(db: Session, limit: int = 5, periodo: str = "todos"):
+    query = (
         db.query(
             Producto.id,
             Producto.nombre,
@@ -31,11 +52,19 @@ def get_top_productos(db: Session, limit: int = 5):
         .join(DetalleVenta, Producto.id == DetalleVenta.producto_id)
         .join(Venta, DetalleVenta.venta_id == Venta.id)
         .filter(Venta.estado == "COMPLETADA")
-        .group_by(Producto.id)
+    )
+
+    fecha_inicio = _obtener_fecha_inicio(periodo)
+    if fecha_inicio:
+        query = query.filter(Venta.fecha >= fecha_inicio)
+
+    resultados = (
+        query.group_by(Producto.id)
         .order_by(desc("total_vendido"))
         .limit(limit)
         .all()
     )
+
     return [
         {
             "producto_id": r.id,

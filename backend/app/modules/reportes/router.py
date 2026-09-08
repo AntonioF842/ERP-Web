@@ -22,17 +22,19 @@ def obtener_alertas_stock(
 
 # Resumen Financiero
 @router.get("/resumen", response_model=schemas.ResumenVentasResponse)
-def obtener_resumen_general(
+def obterner_resumen_general(
+    periodo: str = "todos",
     db: Session = Depends(get_db),
     _user: Usuario = Depends(require_roles(["admin"]))
 ):
-    return services.get_resumen_ventas(db=db)
+    return services.get_resumen_ventas(db=db, periodo=periodo)
 
 # Top Productos
 @router.get("/top-productos", response_model=List[schemas.ProductoTopResponse])
 def obtener_top_productos(
     limit: int = 5,
+    periodo: str = "todos",
     db: Session = Depends(get_db),
-    _user: Usuario = Depends(require_roles(["admin"]))
+    _user: Usuario =  Depends(require_roles(["admin"]))
 ):
-    return services.get_top_productos(db=db, limit=limit)
+    return services.get_top_productos(db=db, limit=limit, periodo=periodo)
