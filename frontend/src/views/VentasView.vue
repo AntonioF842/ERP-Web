@@ -108,23 +108,32 @@
 
         <Message v-if="errorMessage" severity="error" :closable="false">{{ errorMessage }}</Message>
 
+        <!-- Lista de Productos en el Carrito (Selector +/- Compacto) -->
         <div v-if="carrito.length > 0" class="divide-y divide-slate-100 max-h-64 overflow-y-auto pr-1 space-y-2">
           <div v-for="(item, index) in carrito" :key="item.producto_id" class="pt-2 flex justify-between items-center gap-2">
             <div class="flex-1 min-w-0">
               <p class="font-semibold text-sm text-slate-800 truncate">{{ item.nombre }}</p>
               <p class="text-xs text-slate-400">${{ item.precio_unitario.toFixed(2) }} c/u</p>
             </div>
-            <div class="flex items-center gap-2 shrink-0">
-              <InputNumber 
-                v-model="item.cantidad" 
-                :min="1" 
-                :max="item.stock_max" 
-                showButtons 
-                buttonLayout="horizontal" 
-                class="w-24 p-inputnumber-sm" 
-                @change="validarCantidad(item)"
-              />
-              <Button icon="pi pi-times" severity="secondary" text rounded size="small" @click="removerDelCarrito(index)" />
+            
+            <!-- Botones +/- alineados sin desbordar -->
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button 
+                type="button"
+                @click="decrementarCantidad(item)"
+                class="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 font-bold text-xs"
+              >
+                -
+              </button>
+              <span class="w-7 text-center font-bold text-sm text-slate-800">{{ item.cantidad }}</span>
+              <button 
+                type="button"
+                @click="incrementarCantidad(item)"
+                class="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 font-bold text-xs"
+              >
+                +
+              </button>
+              <Button icon="pi pi-trash" severity="danger" text rounded size="small" @click="removerDelCarrito(index)" />
             </div>
           </div>
         </div>
@@ -230,7 +239,6 @@
       :modal="true" 
       class="p-fluid w-full max-w-md"
     >
-      <!-- Contenedor con estilos CSS tradicionales (sin oklch) para html2pdf -->
       <div 
         id="ticket-imprimible" 
         style="background-color: #ffffff; color: #1e293b; font-family: sans-serif; padding: 20px; border-radius: 8px;"
@@ -290,7 +298,6 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';
-import InputNumber from 'primevue/inputnumber';
 import InputText from 'primevue/inputtext';
 import Message from 'primevue/message';
 import Dialog from 'primevue/dialog';
@@ -366,10 +373,19 @@ const agregarAlCarrito = (producto) => {
   }
 };
 
-const validarCantidad = (item) => {
-  if (item.cantidad > item.stock_max) {
-    item.cantidad = item.stock_max;
+const incrementarCantidad = (item) => {
+  errorMessage.value = '';
+  if (item.cantidad < item.stock_max) {
+    item.cantidad++;
+  } else {
     errorMessage.value = `Stock máximo alcanzado para ${item.nombre}`;
+  }
+};
+
+const decrementarCantidad = (item) => {
+  errorMessage.value = '';
+  if (item.cantidad > 1) {
+    item.cantidad--;
   }
 };
 
@@ -430,10 +446,10 @@ const confirmarCancelacion = async (venta) => {
 const descargarPDF = () => {
   const element = document.getElementById('ticket-imprimible');
   const opt = {
-    margin: 0.5,
-    filename: `ticket_venta_${ventaSeleccionada.value.id}.pdf`,
+    margin: 0.3,
+    filename: `ticket_venta_${ventaSeleccionada.value?.id || '001'}.pdf`,
     image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2 },
+    html2canvas: { scale: 2, useCORS: true, logging: false },
     jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
   };
   html2pdf().set(opt).from(element).save();

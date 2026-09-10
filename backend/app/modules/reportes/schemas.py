@@ -1,5 +1,6 @@
 from pydantic import BaseModel, ConfigDict
-from typing import List
+from datetime import datetime
+from typing import List, Optional
 
 class ProductosStockBajoReponse(BaseModel):
     id: int
@@ -20,3 +21,14 @@ class ProductoTopResponse(BaseModel):
     sku: str
     total_vendido: int
     total_recaudado: float
+
+class MoviminetoReporteResponse(BaseModel):
+    id: int
+    producto_nombre: str
+    sku: str
+    tipo_movimiento: str
+    cantidad: int
+    motivo: Optional[str] =None
+    fecha: datetime
+
+    model_config = ConfigDict(from_attributes=True)

@@ -38,3 +38,11 @@ def obtener_top_productos(
     _user: Usuario =  Depends(require_roles(["admin"]))
 ):
     return services.get_top_productos(db=db, limit=limit, periodo=periodo)
+
+@router.get("/movimientos", response_model=List[schemas.MoviminetoReporteResponse])
+def obtener_movimiento_reporte(
+    periodo: str = "todos",
+    db: Session = Depends(get_db),
+    _user: Usuario =  Depends(require_roles(["admin"]))
+):
+    return services.get_movimientos_stock(db=db, periodo=periodo)

@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
 
-from backend.app.modules.inventario.models import Producto
+from backend.app.modules.inventario.models import Producto, MovimientoInventario
 from backend.app.modules.ventas.models import Venta, DetalleVenta
 
 # Alerta de Stock bajo
@@ -75,3 +75,32 @@ def get_top_productos(db: Session, limit: int = 5, periodo: str = "todos"):
         }
         for r in resultados
     ]
+
+def _obtener_fecha_inicio(periodo: str):
+    ahora = datetime.now(timezone.utc)
+    if periodo == "dia":
+        return ahora - timedelta(days=1)
+    elif periodo == "semana":
+        return ahora - timedelta(days=7)
+    elif periodo == "mes":
+        return ahora - timedelta(days=30)
+    elif periodo == "anio":
+        return ahora - timedelta(days=365)
+    return None
+
+def get_movimientos_stock(db: Session, periodo: str = "todos"):
+    query = db.query(
+        MovimientoInventario.id,
+        Producto.nombre.label("producto_nombre"),
+        Producto.sku,
+        MovimientoInventario.tipo_movimiento,
+        MovimientoInventario.cantidad,
+        MovimientoInventario.motivo,
+        MovimientoInventario.fecha
+    ).join(Producto, MovimientoInventario.producto_id == Producto.id)
+
+    fecha_inicio =  _obtener_fecha_inicio(periodo)
+    if fecha_inicio:
+        query = query.filter(MovimientoInventario.fecha >= fecha_inicio)
+
+    return query.order_by(desc(MovimientoInventario.fecha)).limit(50).all()
